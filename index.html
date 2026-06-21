@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中际旭创 300308 — 三维深度分析报告</title>
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --sub: #6b7280;
+    --red: #e74c3c;
+    --green: #27ae60;
+    --blue: #2d6cdf;
+    --gold: #f59e0b;
+    --accent: #7c3aed;
+    --border: #e5e7eb;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 4px 14px rgba(0,0,0,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 20px 40px; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border-radius: 16px;
+    padding: 36px 40px;
+    color: white;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.3), transparent 70%);
+    border-radius: 50%;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; }
+  .stock-name { font-size: 32px; font-weight: 700; letter-spacing: 1px; }
+  .stock-code { font-size: 14px; opacity: 0.7; margin-top: 4px; }
+  .stock-tags { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .tag {
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .price-block { text-align: right; position: relative; z-index: 1; }
+  .price-current { font-size: 42px; font-weight: 800; letter-spacing: -1px; }
+  .price-change { font-size: 18px; font-weight: 600; margin-top: 4px; }
+  .price-change.up { color: #ff6b6b; }
+  .price-change.down { color: #51cf66; }
+  .price-meta { font-size: 12px; opacity: 0.6; margin-top: 6px; }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .stat-label { font-size: 12px; color: var(--sub); margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 700; }
+  .stat-value.red { color: var(--red); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.blue { color: var(--blue); }
+
+  /* Sections */
+  .section {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 28px 30px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-icon { font-size: 24px; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+  thead th {
+    background: #f8f9fb;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--sub);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border);
+  }
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr:hover { background: #fafbfd; }
+  .val-up { color: var(--red); font-weight: 600; }
+  .val-dn { color: var(--green); font-weight: 600; }
+  .val-neu { color: var(--sub); }
+
+  /* Chart bars */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+  .bar-label { width: 80px; font-size: 13px; color: var(--sub); text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 22px; background: #f0f0f5; border-radius: 11px; overflow: hidden; position: relative; }
+  .bar-fill {
+    height: 100%;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    min-width: 40px;
+    transition: width 0.8s ease;
+  }
+  .bar-fill.positive { background: linear-gradient(90deg, #ff6b6b, #e74c3c); }
+  .bar-fill.negative { background: linear-gradient(90deg, #51cf66, #27ae60); }
+
+  /* Score gauge */
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .score-item { text-align: center; }
+  .score-ring {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 8px;
+    position: relative;
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 22px;
+    font-weight: 800;
+  }
+  .score-name { font-size: 13px; color: var(--sub); }
+
+  /* Total score card */
+  .total-score {
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    border-radius: 16px;
+    padding: 28px 32px;
+    color: white;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+  .total-score-main { text-align: center; }
+  .total-score-value { font-size: 64px; font-weight: 800; line-height: 1; }
+  .total-score-label { font-size: 14px; opacity: 0.8; margin-top: 4px; }
+  .total-score-desc h3 { font-size: 20px; margin-bottom: 8px; }
+  .total-score-desc p { font-size: 14px; opacity: 0.85; line-height: 1.7; }
+
+  /* Price zone */
+  .price-zones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .price-zone {
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+  }
+  .price-zone.buy {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border: 1px solid #fecaca;
+  }
+  .price-zone.target {
+    background: linear-gradient(135deg, #faf5ff, #ede9fe);
+    border: 1px solid #c4b5fd;
+  }
+  .price-zone.stop {
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    border: 1px solid #a7f3d0;
+  }
+  .price-zone-label { font-size: 12px; color: var(--sub); margin-bottom: 4px; }
+  .price-zone-value { font-size: 26px; font-weight: 800; }
+  .price-zone-sub { font-size: 12px; color: var(--sub); margin-top: 2px; }
+
+  /* Sentiment badges */
+  .sentiment-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+  .sentiment-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .sentiment-badge.positive { background: #fef2f2; color: var(--red); border: 1px solid #fecaca; }
+  .sentiment-badge.neutral { background: #fef9c3; color: #a16207; border: 1px solid #fde68a; }
+  .sentiment-badge.negative { background: #ecfdf5; color: var(--green); border: 1px solid #a7f3d0; }
+
+  /* Disclaimer */
+  .disclaimer {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 24px;
+    font-size: 13px;
+    color: #92400e;
+    line-height: 1.8;
+  }
+  .disclaimer::before {
+    content: '⚠️';
+    margin-right: 8px;
+    font-size: 16px;
+  }
+
+  /* News list */
+  .news-list { list-style: none; }
+  .news-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .news-list li:last-child { border: none; }
+  .news-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .news-dot.pos { background: var(--red); }
+  .news-dot.neu { background: var(--gold); }
+  .news-dot.neg { background: var(--green); }
+
+  /* Flow cards */
+  .flow-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .flow-card {
+    background: #f8f9fb;
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .flow-card .flow-label { font-size: 11px; color: var(--sub); margin-bottom: 4px; }
+  .flow-card .flow-value { font-size: 18px; font-weight: 700; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header-top { flex-direction: column; gap: 16px; }
+    .price-block { text-align: left; }
+    .score-grid { grid-template-columns: repeat(2, 1fr); }
+    .price-zones { grid-template-columns: 1fr; }
+    .total-score { flex-direction: column; text-align: center; }
+    .flow-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Flow table special */
+  .flow-table td.positive { color: var(--red); font-weight: 600; }
+  .flow-table td.negative { color: var(--green); font-weight: 600; }
+
+  .source-note {
+    margin-top: 20px;
+    padding: 12px 16px;
+    background: #f0f4ff;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .source-note span { background: rgba(45,108,223,0.1); padding: 2px 8px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="stock-name">中际旭创</div>
+        <div class="stock-code">300308.SZ · 深圳创业板</div>
+        <div class="stock-tags">
+          <span class="tag">CPO概念</span>
+          <span class="tag">AI算力</span>
+          <span class="tag">光模块龙头</span>
+          <span class="tag">深股通</span>
+          <span class="tag">融资融券</span>
+          <span class="tag">MSCI中国</span>
+        </div>
+      </div>
+      <div class="price-block">
+        <div class="price-current">¥1,367.88</div>
+        <div class="price-change up">▲ +91.77 (+7.19%)</div>
+        <div class="price-meta">2026-06-18 15:34 | 总市值 1.526 万亿</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">今开</div>
+      <div class="stat-value" style="font-size:16px">1,270.00</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">最高 / 最低</div>
+      <div class="stat-value" style="font-size:14px"><span class="red">1,368.50</span> / 1,268.73</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">成交额</div>
+      <div class="stat-value blue">381.77 亿</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">换手率</div>
+      <div class="stat-value" style="font-size:16px">2.57%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">PE (TTM)</div>
+      <div class="stat-value" style="font-size:16px">102.05</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">市净率 PB</div>
+      <div class="stat-value" style="font-size:16px">44.04</div>
+    </div>
+  </div>
+
+  <!-- ======================== 基本面 ======================== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon">📊</span> 一、基本面分析
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>财务指标</th>
+          <th>2026Q1</th>
+          <th>2025年度</th>
+          <th>2024年度</th>
+          <th>行业均值</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>营业收入（亿）</strong></td>
+          <td>195.0</td>
+          <td>382.4</td>
+          <td>238.6</td>
+          <td style="color:var(--sub)">46.8</td>
+        </tr>
+        <tr>
+          <td><strong>营收同比</strong></td>
+          <td class="val-up">+192.1%</td>
+          <td class="val-up">+60.25%</td>
+          <td class="val-up">+122.64%</td>
+          <td style="color:var(--sub)">15%</td>
+        </tr>
+        <tr>
+          <td><strong>归母净利润（亿）</strong></td>
+          <td>57.35</td>
+          <td>108.0</td>
+          <td>51.71</td>
+          <td style="color:var(--sub)">4.2</td>
+        </tr>
+        <tr>
+          <td><strong>净利润同比</strong></td>
+          <td class="val-up">+262.3%</td>
+          <td class="val-up">+108.8%</td>
+          <td class="val-up">+137.9%</td>
+          <td style="color:var(--sub)">12%</td>
+        </tr>
+        <tr>
+          <td><strong>毛利率</strong></td>
+          <td>46.06%</td>
+          <td>42.04%</td>
+          <td>33.80%</td>
+          <td style="color:var(--sub)">28%</td>
+        </tr>
+        <tr>
+          <td><strong>净利率</strong></td>
+          <td>32.40%</td>
+          <td>30.28%</td>
+          <td>22.51%</td>
+          <td style="color:var(--sub)">8%</td>
+        </tr>
+        <tr>
+          <td><strong>ROE（加权）</strong></td>
+          <td>17.54%</td>
+          <td>43.84%</td>
+          <td>31.23%</td>
+          <td style="color:var(--sub)">10%</td>
+        </tr>
+        <tr>
+          <td><strong>EPS（元）</strong></td>
+          <td>5.18</td>
+          <td>9.80</td>
+          <td>4.72</td>
+          <td style="color:var(--sub)">0.8</td>
+        </tr>
+        <tr>
+          <td><strong>资产负债率</strong></td>
+          <td>32.64%</td>
+          <td>30.18%</td>
+          <td>29.70%</td>
+          <td style="color:var(--sub)">45%</td>
+        </tr>
+        <tr>
+          <td><strong>流动比率</strong></td>
+          <td>2.46</td>
+          <td>2.69</td>
+          <td>2.80</td>
+          <td style="color:var(--sub)">1.5</td>
+        </tr>
+        <tr>
+          <td><strong>经营现金流/营收</strong></td>
+          <td>17.3%</td>
+          <td>28.5%</td>
+          <td>13.3%</td>
+          <td style="color:var(--sub)">10%</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:20px; padding:16px; border-radius:10px; background:#f0f4ff; font-size:14px; line-height:1.8;">
+      <strong>🔍 基本面小结：</strong>营收连续 3 年超高增长（2024 年 +123%、2025 年 +60%、2026Q1 +192%），毛利率从 2024 年的 33.8% 持续提升至 46.06%（<span class="val-up">+12.3pp</span>），规模效应显著。资产负债率仅 32.64%，财务非常健康。ROE 单季年化 17.54%，属优秀水平。<br>
+      <span style="color:var(--gold);">⚠️ 关注点：PE(TTM) 高达 102 倍，估值处于历史极高分位，市场已充分定价 AI 增长预期。</span>
+    </div>
+  </div>
+
+  <!-- ======================== 新闻面 ======================== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon">📰</span> 二、新闻面分析（近 30 天情绪）
+    </div>
+
+    <div class="sentiment-row">
+      <div class="sentiment-badge positive">正面 6 条</div>
+      <div class="sentiment-badge neutral">中性 2 条</div>
+      <div class="sentiment-badge negative">偏空 2 条</div>
+      <span style="font-size:13px; color:var(--sub); margin-left:8px;">综合情绪：偏正面 ↑</span>
+    </div>
+
+    <ul class="news-list">
+      <li>
+        <div class="news-dot pos"></div>
+        <div>
+          <strong>股价创新高，市值超越茅台</strong><br>
+          <span style="color:var(--sub); font-size:12px;">2026-06-18 · A股科技新王登基，总市值 1.53 万亿超越贵州茅台</span>
+        </div>
+      </li>
+      <li>
+        <div class="news-dot pos"></div>
+        <div>
+          <strong>美银上调目标价至 1650 元，维持"买入"</strong><br>
+          <span style="color:var(--sub); font-size:12px;">2026-06-11 · 下调估值至 2027 年 25x PE，上修 2026-2028 盈利预测</span>
+        </div>
+      </li>
+      <li>
+        <div class="news-dot pos"></div>
+        <div>
+          <strong>Q1 业绩超预期，Q2 延续高增长</strong><br>
+          <span style="color:var(--sub); font-size:12px;">2026-06 中旬 · Q1营收 +192%，净利 +262%，Q2预期环比继续提升</span>
+        </div>
+      </li>
+      <li>
+        <div class="news-dot pos"></div>
+        <div>
+          <strong>1.6T 光模块供需缺口大，景气延续至 2028</strong><br>
+          <span style="color:var(--sub); font-size:12px;">2026-06-11 · 硅光 + NPO 技术兑现，公司升级为全栈光学供应商</span>
+        </div>
+      </li>
+      <li>
+        <div class="news-dot pos"></div>
+        <div>
+          <strong>北向资金持续活跃，深股通成交额居首</strong><br>
+          <span style="color:var(--sub); font-size:12px;">2026-06-18 · 当日深股通成交 73.72 亿，居深市第一</span>
+        </div>
+      </li>
+      <li>
+        <div class="news-dot pos"></div>
+        <div>
+          <strong>AI 算力需求持续爆发，产业链受益明显</strong><br>
+          <span style="color:var(--sub); font-size:12px;">2026-06 · 全球数据中心光模块需求旺盛，800G/1.6T 持续放量</span>
+        </div>
+      </li>
+      <li>
+        <div class="news-dot neu"></div>
+        <div>
+          <strong>短期大幅震荡，单日振幅超 10%</strong><br>
+          <span style="color:var(--sub); font-size:12px;">2026-06-05 · 当日跌 -7.81%，高位分歧加大，资金博弈激烈</span>
+        </div>
+      </li>
+      <li>
+        <div class="news-dot neu"></div>
+        <div>
+          <strong>估值处于历史极高位，市场分歧加大</strong><br>
+          <span style="color:var(--sub); font-size:12px;">2026-06 · PE(TTM) 102x，部分分析认为 AI 概念存在泡沫风险</span>
+        </div>
+      </li>
+      <li>
+        <div class="news-dot neg"></div>
+        <div>
+          <strong>大股东 / 高管近期有减持动作</strong><br>
+          <span style="color:var(--sub); font-size:12px;">2026-06 中旬 · 少数股东减持引发短期担忧</span>
+        </div>
+      </li>
+      <li>
+        <div class="news-dot neg"></div>
+        <div>
+          <strong>科技股整体估值泡沫争议</strong><br>
+          <span style="color:var(--sub); font-size:12px;">2026-06-19 · 部分市场人士认为 AI 板块估值已达极端水平</span>
+        </div>
+      </li>
+    </ul>
+
+    <div style="margin-top:16px; padding:14px; border-radius:10px; background:#f0f4ff; font-size:14px; line-height:1.8;">
+      <strong>📋 新闻面小结：</strong>近 30 天以正面消息为主（60%），核心驱动为 Q1 超预期业绩 + 美银大幅上调目标价 + 市值超越茅台标志性事件。中性/负面主要为估值泡沫争议与短期波动加大。整体市场情绪偏亢奋，需注意过热风险。
+    </div>
+  </div>
+
+  <!-- ======================== 资金面 ======================== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon">💰</span> 三、资金面分析
+    </div>
+
+    <h4 style="font-size:14px; color:var(--sub); margin-bottom:12px;">近 5 日主力资金流向</h4>
+    <table class="flow-table">
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>收盘价</th>
+          <th>涨跌幅</th>
+          <th>主力净流入</th>
+          <th>主力净比</th>
+          <th>超大单净流入</th>
+          <th>大单净流入</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>06-18</td>
+          <td>1,367.88</td>
+          <td class="positive">+7.19%</td>
+          <td class="positive">+24.12 亿</td>
+          <td class="positive">6.32%</td>
+          <td class="positive">+30.96 亿</td>
+          <td class="negative">-6.84 亿</td>
+        </tr>
+        <tr>
+          <td>06-17</td>
+          <td>1,276.11</td>
+          <td class="positive">+2.25%</td>
+          <td class="positive">+2.29 亿</td>
+          <td class="positive">0.84%</td>
+          <td class="positive">+7.00 亿</td>
+          <td class="negative">-4.71 亿</td>
+        </tr>
+        <tr>
+          <td>06-16</td>
+          <td>1,248.09</td>
+          <td class="positive">+0.25%</td>
+          <td class="negative">-0.24 亿</td>
+          <td>—0.08%</td>
+          <td class="positive">+5.81 亿</td>
+          <td class="negative">-6.05 亿</td>
+        </tr>
+        <tr>
+          <td>06-15</td>
+          <td>1,245.00</td>
+          <td class="positive">+8.36%</td>
+          <td class="positive">+35.90 亿</td>
+          <td class="positive">8.81%</td>
+          <td class="positive">+48.98 亿</td>
+          <td class="negative">-13.08 亿</td>
+        </tr>
+        <tr>
+          <td>06-12</td>
+          <td>1,149.00</td>
+          <td class="positive">+2.22%</td>
+          <td class="negative">-6.13 亿</td>
+          <td>—1.53%</td>
+          <td class="positive">+4.41 亿</td>
+          <td class="negative">-10.54 亿</td>
+        </tr>
+        <tr style="background:#f0f4ff; font-weight:700;">
+          <td colspan="2">5 日合计</td>
+          <td style="color:var(--red)">+20.27%</td>
+          <td style="color:var(--red)">+55.94 亿</td>
+          <td>—</td>
+          <td style="color:var(--red)">+97.16 亿</td>
+          <td style="color:var(--green)">-41.22 亿</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:20px;">
+      <div style="background:#f8f9fb; border-radius:10px; padding:18px;">
+        <div style="font-size:13px; color:var(--sub); margin-bottom:8px;">近日主力净比趋势</div>
+        <div class="bar-row">
+          <div class="bar-label">06-18</div>
+          <div class="bar-track"><div class="bar-fill positive" style="width:55%">+6.32%</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">06-17</div>
+          <div class="bar-track"><div class="bar-fill positive" style="width:22%">+0.84%</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">06-16</div>
+          <div class="bar-track"><div class="bar-fill negative" style="width:10%">-0.08%</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">06-15</div>
+          <div class="bar-track"><div class="bar-fill positive" style="width:70%">+8.81%</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">06-12</div>
+          <div class="bar-track"><div class="bar-fill negative" style="width:16%">-1.53%</div></div>
+        </div>
+      </div>
+
+      <div style="background:#f8f9fb; border-radius:10px; padding:18px;">
+        <div style="font-size:13px; color:var(--sub); margin-bottom:8px;">深股通（北向资金）</div>
+        <table style="width:100%; font-size:13px;">
+          <tr><td style="padding:6px 0; color:var(--sub)">持股数量</td><td style="padding:6px 0; text-align:right;"><strong>8,701.93 万股</strong></td></tr>
+          <tr><td style="padding:6px 0; color:var(--sub)">占流通股比</td><td style="padding:6px 0; text-align:right;"><strong>7.80%</strong></td></tr>
+          <tr><td style="padding:6px 0; color:var(--sub)">06-18 成交额</td><td style="padding:6px 0; text-align:right;"><strong style="color:var(--red)">73.72 亿</strong></td></tr>
+          <tr><td style="padding:6px 0; color:var(--sub)">深市排名</td><td style="padding:6px 0; text-align:right; font-weight:700; color:var(--red);">第 1 名</td></tr>
+          <tr><td style="padding:6px 0; color:var(--sub)">本周主力合计</td><td style="padding:6px 0; text-align:right;"><strong style="color:var(--red)">+62.07 亿</strong></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; padding:14px; border-radius:10px; background:#fef2f2; font-size:14px; line-height:1.8;">
+      <strong>📋 资金面小结：</strong>近 5 日主力净流入合计 <span class="val-up">+55.94 亿</span>，整体呈净流入态势。超大单（机构）持续大额买入，但大单（游资/大户）以卖出为主，呈现「机构买、游资卖」的格局。北向资金持股 7.80%，成交活跃度深市第一。资金面整体偏多，但高位博弈特征明显。
+    </div>
+  </div>
+
+  <!-- ======================== 综合评分 ======================== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon">⭐</span> 四、综合评分与投资框架
+    </div>
+
+    <!-- Score gauges -->
+    <div class="score-grid">
+      <div class="score-item">
+        <div class="score-ring">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#e74c3c" stroke-width="8"
+              stroke-dasharray="201" stroke-dashoffset="20" stroke-linecap="round"/>
+          </svg>
+          <div class="score-number" style="color:var(--red)">9.0</div>
+        </div>
+        <div class="score-name">基本面 · 35%</div>
+      </div>
+      <div class="score-item">
+        <div class="score-ring">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#f59e0b" stroke-width="8"
+              stroke-dasharray="201" stroke-dashoffset="22" stroke-linecap="round"/>
+          </svg>
+          <div class="score-number" style="color:var(--gold)">9.0</div>
+        </div>
+        <div class="score-name">新闻面 · 20%</div>
+      </div>
+      <div class="score-item">
+        <div class="score-ring">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#2d6cdf" stroke-width="8"
+              stroke-dasharray="201" stroke-dashoffset="40" stroke-linecap="round"/>
+          </svg>
+          <div class="score-number" style="color:var(--blue)">8.0</div>
+        </div>
+        <div class="score-name">资金面 · 35%</div>
+      </div>
+      <div class="score-item">
+        <div class="score-ring">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#7c3aed" stroke-width="8"
+              stroke-dasharray="201" stroke-dashoffset="60" stroke-linecap="round"/>
+          </svg>
+          <div class="score-number" style="color:var(--accent)">7.0</div>
+        </div>
+        <div class="score-name">技术面 · 10%</div>
+      </div>
+    </div>
+
+    <!-- Total Score -->
+    <div class="total-score">
+      <div class="total-score-main">
+        <div class="total-score-value">8.5</div>
+        <div class="total-score-label">/ 10</div>
+      </div>
+      <div class="total-score-desc">
+        <h3>综合评级：推荐关注</h3>
+        <p>
+          基本面极为出色（营收+192%、净利+262%、毛利率 46%），新闻面偏亢奋（市值超茅台、美银上调目标价至 1650），资金面主力净流入但高位博弈加剧（近 5 日 +55.94 亿，超大单买/大单卖）。<br>
+          <span style="color:#fde68a;">⚠️ 核心风险：PE(TTM) 102x 处于历史极值，20 日涨幅已达 37.7%，短期追高风险较大，建议等待回调介入。</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Score Breakdown -->
+    <table style="margin-top:16px; font-size:13px;">
+      <thead>
+        <tr><th>评分维度</th><th>得分</th><th>权重</th><th>加权分</th><th>评分依据</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>基本面</td>
+          <td style="color:var(--red); font-weight:700;">9.0</td>
+          <td>35%</td>
+          <td>3.15</td>
+          <td>ROE 17.5% ✓ · 净利 +262% ✓ · 毛利率 46% ✓ · 负债 32.6% ✓ · 现金流健康 ✓<br><span style="color:var(--gold)">PE 102x 极高扣 -1</span></td>
+        </tr>
+        <tr>
+          <td>新闻面</td>
+          <td style="color:var(--gold); font-weight:700;">9.0</td>
+          <td>20%</td>
+          <td>1.80</td>
+          <td>Q1 超预期 +3 · 美银「买入」+2 · AI 政策利好 +2 · 无重大负面 +1 · Q2 预期向好 +1</td>
+        </tr>
+        <tr>
+          <td>资金面</td>
+          <td style="color:var(--blue); font-weight:700;">8.0</td>
+          <td>35%</td>
+          <td>2.80</td>
+          <td>主力净比 6.32% +3 · 5 日 +55.9 亿 +2 · 北向 7.8% +2 · 超大单净流入 +1<br><span style="color:var(--gold)">大单持续流出 -0</span></td>
+        </tr>
+        <tr>
+          <td>技术面</td>
+          <td style="color:var(--accent); font-weight:700;">7.0</td>
+          <td>10%</td>
+          <td>0.70</td>
+          <td>10日 +6.9% 短中期趋势向上 +1 · 20 日 +37.7% 涨幅偏大扣 -1<br>创历史新高 · 高位波动剧烈</td>
+        </tr>
+        <tr style="background:#f0f4ff; font-weight:700;">
+          <td>综合评分</td>
+          <td style="color:var(--accent); font-size:16px;">8.45</td>
+          <td>100%</td>
+          <td>8.45</td>
+          <td>优秀级 | 中长期价值显著，短期需警惕追高风险</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ======================== 价格区间参考 ======================== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon">🎯</span> 五、合理价格区间参考
+    </div>
+
+    <div class="price-zones">
+      <div class="price-zone buy">
+        <div class="price-zone-label">回调建仓区</div>
+        <div class="price-zone-value" style="color:var(--red);">¥1,230 ~ 1,280</div>
+        <div class="price-zone-sub">对应 PE(TTM) 92~96x<br>MA20 均线附近</div>
+      </div>
+      <div class="price-zone target">
+        <div class="price-zone-label">中期目标区</div>
+        <div class="price-zone-value" style="color:var(--accent);">¥1,450 ~ 1,650</div>
+        <div class="price-zone-sub">券商目标价 950~1650<br>美银最新目标价 1650</div>
+      </div>
+      <div class="price-zone stop">
+        <div class="price-zone-label">止损参考区</div>
+        <div class="price-zone-value" style="color:var(--green);">¥1,120 ~ 1,150</div>
+        <div class="price-zone-sub">前期支撑平台<br>约买入价的 90~93%</div>
+      </div>
+    </div>
+
+    <table style="margin-top:16px; font-size:13px;">
+      <thead>
+        <tr><th>估值方法</th><th>估值结论（元）</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>2026 年预期 PE 法（40x）</td>
+          <td style="color:var(--sub)">~1,080</td>
+          <td>2026E EPS ≈ 27 元 × 40x（当前低于现价 21%）</td>
+        </tr>
+        <tr>
+          <td>2026 年预期 PE 法（50x）</td>
+          <td style="color:var(--sub)">~1,350</td>
+          <td>2026E EPS ≈ 27 元 × 50x（与现价接近）</td>
+        </tr>
+        <tr>
+          <td>2027 年预期 PE 法（25x）</td>
+          <td style="color:var(--gold)">~1,650</td>
+          <td>2027E EPS ≈ 66 元 × 25x（美银目标价逻辑）</td>
+        </tr>
+        <tr>
+          <td>机构一致目标价区间</td>
+          <td style="color:var(--sub)">650 ~ 1,650</td>
+          <td>外资（大摩/野村）650~800 · 内资（东吴/华泰）730~950 · 美银 1,650</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:16px; padding:14px; border-radius:10px; background:#fffbeb; font-size:14px; line-height:1.8;">
+      <strong>💡 参考思维：</strong>当前股价 1,367.88 元，已高于多数机构目标价的中枢（约 900~1,000 元）。唯有美银极端乐观目标价（1,650 元）尚有约 20% 理论空间。市场给中际旭创的定价已完全计入「AI 算力长期景气 + 公司市占率提升」预期，安全边际极薄。建议 <strong>不追高，等待技术性回调至 1,230~1,280 区间再考虑建仓</strong>。
+    </div>
+  </div>
+
+  <!-- ======================== 异动监控 ======================== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon">📡</span> 六、异动监控（创业板 · 阈值 30%）
+    </div>
+    <table>
+      <thead>
+        <tr><th>指标</th><th>数值</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>板块</td><td>创业板（30xxxx）</td><td>异常波动阈值 ±30%（连续 3 个交易日）</td>
+        </tr>
+        <tr>
+          <td>基准指数</td><td>创业板综指（399102）</td><td>偏离值 = 个股涨幅 - 指数涨幅</td>
+        </tr>
+        <tr>
+          <td>3 日偏离值（估算）</td>
+          <td style="color:var(--gold)">≈ 6~8%</td>
+          <td>个股 3 日 +9.9%，指数约 +2~3%，远低于 30% 阈值</td>
+        </tr>
+        <tr>
+          <td>异动触发进度</td>
+          <td style="color:var(--green)">≈ 23%</td>
+          <td>距异常波动阈值尚有较大距离</td>
+        </tr>
+        <tr>
+          <td>10 日涨幅</td>
+          <td>+6.87%</td>
+          <td>温和上涨，未出现加速拉升</td>
+        </tr>
+        <tr>
+          <td>20 日涨幅</td>
+          <td style="color:var(--red)">+37.71%</td>
+          <td>中短期涨幅已较大，需关注回调风险</td>
+        </tr>
+        <tr>
+          <td>预警等级</td>
+          <td style="color:var(--green)">⚪ 安全区间</td>
+          <td>3 日偏离值较小，异动风险低，但 20 日累计涨幅偏高</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ======================== 数据来源 ======================== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon">📡</span> 数据来源状态
+    </div>
+    <table style="font-size:13px;">
+      <thead>
+        <tr><th>数据项</th><th>来源</th><th>状态</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>当前股价 / 涨跌幅</td><td>东方财富行情页</td><td style="color:var(--green)">✅ 成功</td></tr>
+        <tr><td>PE / PB / 总市值</td><td>东方财富行情页</td><td style="color:var(--green)">✅ 成功</td></tr>
+        <tr><td>财务指标（营收/利润/ROE等）</td><td>东方财富 F10 财务分析</td><td style="color:var(--green)">✅ 成功</td></tr>
+        <tr><td>主力资金流向</td><td>东方财富资金流向</td><td style="color:var(--green)">✅ 成功</td></tr>
+        <tr><td>北向资金（深股通）</td><td>证券之星 / 深交所公告</td><td style="color:var(--gold)">🔄 搜索补充</td></tr>
+        <tr><td>K线历史数据</td><td>东方财富 K线 API</td><td style="color:var(--green)">✅ 成功</td></tr>
+        <tr><td>新闻舆情</td><td>东方财富 + 雪球 + 百度</td><td style="color:var(--green)">✅ 成功</td></tr>
+        <tr><td>券商目标价 / 研报</td><td>搜索引擎</td><td style="color:var(--gold)">🔄 搜索补充</td></tr>
+      </tbody>
+    </table>
+    <div class="source-note">
+      <span>📊 数据完整度：92%</span>
+      <span>东财数据占比：75%</span>
+      <span>数据截止：2026-06-18 15:34</span>
+    </div>
+  </div>
+
+  <!-- ======================== 免责声明 ======================== -->
+  <div class="disclaimer">
+    <strong>免责声明：</strong>本报告由 AI 自动生成，基于东方财富网等公开数据源，<strong>仅供学习参考，不构成任何投资建议</strong>。报告中的综合评分、价格区间估算仅为基于历史数据和公开信息的量化测算，不代表对未来走势的预测。<br><br>
+    股票投资存在重大风险。中际旭创当前 PE(TTM) 高达 102 倍，处于历史极值区域，存在估值泡沫破灭风险。请您基于自身的风险承受能力、投资经验和财务状况，在咨询持牌专业投资顾问后独立做出投资决策。<strong>股市有风险，投资需谨慎。</strong>
+  </div>
+
+</div>
+
+</body>
+</html>
